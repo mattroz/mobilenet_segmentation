@@ -79,7 +79,7 @@ class COCODataLoader(Sequence):
             if self.augmentations:
                 aug = Compose([
                     HorizontalFlip( p=.3),
-                    RandomSizedCrop(p=.3, min_max_height=(0, 224), height=self.resize[0], width=self.resize[1]),
+                    RandomSizedCrop(p=.3, min_max_height=(10, 220), height=self.resize[0], width=self.resize[1]),
                     GridDistortion( p=.3, border_mode=0, distort_limit=0.1),
                     ElasticTransform(p=.3, alpha=10, sigma=120 * 0.5, alpha_affine=120 * 0.05),
                     ShiftScaleRotate(p=.3, border_mode=0, shift_limit=0.04, scale_limit=0.05),
@@ -95,7 +95,7 @@ class COCODataLoader(Sequence):
             images.append(image)
             masks.append(mask)
 
-        return images, masks
+        return np.asanyarray(images), np.expand_dims(masks, axis=-1)
 
 
     def on_epoch_end(self):
