@@ -143,9 +143,9 @@ class MobilenetV2_base(object):
         x = Conv2D(first_block_filters,
                    kernel_size=3,
                    strides=(2, 2), padding='same',
-                   use_bias=False, name='mn_Conv1')(input_tensor_enc)
-        x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='mn_bn_Conv1')(x)
-        x = Activation(tf.nn.relu6, name='mn_Conv1_relu')(x)
+                   use_bias=False, name='enc_mn_Conv1')(input_tensor_enc)
+        x = BatchNormalization(epsilon=1e-3, momentum=0.999, name='enc_mn_bn_Conv1')(x)
+        x = Activation(tf.nn.relu6, name='enc_mn_Conv1_relu')(x)
 
         current_stride = 2
         self.stride_left = output_stride / current_stride
