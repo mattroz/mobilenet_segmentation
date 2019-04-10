@@ -10,10 +10,10 @@ from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
 
 
-BATCH_SIZE = 8
-LR = 1e-4
-EPOCHS=100
-INPUT_SHAPE = (400,400,3)
+BATCH_SIZE = 6
+LR = 1e-3
+EPOCHS = 100
+INPUT_SHAPE = (400, 400, 3)
 
 if __name__ == '__main__':
     argparser = ArgumentParser()
@@ -33,14 +33,17 @@ if __name__ == '__main__':
         mobilenet.model = keras.models.load_model(args.model,custom_objects={'relu6' : relu6})
 
     # Freeze encoder layers which are pretrained
-    if args.freeze_encoder:
-        for layer in mobilenet.model.layers:
-            if layer.name.startswith('enc'):
-                layer.trainable=False
-        print(mobilenet.model.summary())
+    # if args.freeze_encoder:
+    #     for layer in mobilenet.model.layers:
+    #         if layer.name.startswith('enc'):
+    #             layer.trainable=False
+    # else:
+    # for layer in mobilenet.model.layers:
+    #     layer.trainable=True
+    print(mobilenet.model.summary())
 
     # Define optimizer and compile model
-    opt = keras.optimizers.Adam(lr=LR)
+    opt = keras.optimizers.Adam(lr=args.lr)
     mobilenet.model.compile(optimizer=opt, loss='binary_crossentropy')
 
     # Get data generators
@@ -55,11 +58,11 @@ if __name__ == '__main__':
                     path_to_images='/home/matsvei.rozanau/hdd/datasets/coco_dataset/val2017/',
                     batch_size=BATCH_SIZE,
                     resize=INPUT_SHAPE[:-1],
-                    augmentations=True)
+                    augmentations=False)
 
     # Define callbacks
     model_checkpoint = ModelCheckpoint(
-        filepath='./checkpoints/mobilenet401-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
+        filepath='./checkpoints/mobilenet400-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
         monitor = 'val_loss',
         verbose = 1,
         save_best_only = True,
@@ -70,7 +73,7 @@ if __name__ == '__main__':
     plateau_reducer_checkpoint = ReduceLROnPlateau(
         monitor='val_loss',
         factor=0.7,
-        patience=5,
+        patience=7,
         verbose=1,
         min_lr=1e-9)
 
