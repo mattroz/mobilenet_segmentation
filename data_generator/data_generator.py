@@ -30,6 +30,7 @@ class COCODataLoader(Sequence):
                  resize=(480,480),
                  shuffle=True,
                  augmentations=True):
+        print(f'\nLoading COCO dataset from {path_to_images}')
         self.dataset = COCO(path_to_annotations)
         self.path_to_images = path_to_images
         self.batch_size = batch_size
@@ -39,7 +40,6 @@ class COCODataLoader(Sequence):
         self.resize = resize
         self.augmentations = augmentations
         self.shuffle = shuffle
-
 
         if self.shuffle:
             np.random.shuffle(self.images_descriptions)
@@ -79,14 +79,14 @@ class COCODataLoader(Sequence):
             if self.augmentations:
                 aug = Compose([
                     HorizontalFlip( p=.3),
-                    RandomSizedCrop(p=.3, min_max_height=(10, 220), height=self.resize[0], width=self.resize[1]),
-                    GridDistortion( p=.3, border_mode=0, distort_limit=0.1),
-                    ElasticTransform(p=.3, alpha=10, sigma=120 * 0.5, alpha_affine=120 * 0.05),
-                    ShiftScaleRotate(p=.3, border_mode=0, shift_limit=0.04, scale_limit=0.05),
+                    RandomSizedCrop(p=.15, min_max_height=(10, 220), height=self.resize[0], width=self.resize[1]),
+                    GridDistortion( p=.1, border_mode=0, distort_limit=0.1),
+                    ElasticTransform(p=.1, alpha=10, sigma=120 * 0.5, alpha_affine=120 * 0.05),
+                    ShiftScaleRotate(p=.2, border_mode=0, shift_limit=0.04, scale_limit=0.05),
                     OneOf([
                         RandomBrightnessContrast(p=.3),
                         RandomGamma(p=.3)
-                    ], p=1)
+                    ], p=.3)
                 ])
                 augmented = aug(image=image, mask=mask)
                 image = augmented['image']
