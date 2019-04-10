@@ -33,3 +33,7 @@ def iou_metric(y_true, y_pred, smooth=1):
     intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
     union = K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1)
     return K.mean((2. * intersection + smooth) / (union + smooth), axis=0)
+
+
+def iou_loss(y_true, y_pred):
+    return 1 - iou_metric(y_true, y_pred)
