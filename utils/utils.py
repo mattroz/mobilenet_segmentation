@@ -29,11 +29,11 @@ def visualize(image, mask, original_image=None, original_mask=None):
 
 
 def iou_metric(y_true, y_pred, smooth=1):
-    y_pred = K.cast(y_pred, dtype=tf.float64)
-    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
-    union = K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1)
+    y_pred = K.cast(y_pred, dtype=tf.float32)
+    y_true = K.cast(y_true, dtype=tf.float32)
+    intersection = K.sum(K.abs(y_true * y_pred), axis=[1,2])
+    union = K.sum(y_true, axis=[1,2]) + K.sum(y_pred, axis=[1,2])
     return K.mean((2. * intersection + smooth) / (union + smooth), axis=0)
-
 
 def iou_loss(y_true, y_pred):
     return 1 - iou_metric(y_true, y_pred)
