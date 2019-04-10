@@ -75,6 +75,8 @@ from keras.layers import BatchNormalization
 from keras.layers import Conv2D
 from keras.layers import DepthwiseConv2D
 from keras.layers import UpSampling2D
+from keras.layers import Lambda
+from keras.layers import ZeroPadding2D
 from keras.layers import GlobalAveragePooling2D
 from keras.layers import Add
 from keras.layers import Concatenate
@@ -132,11 +134,10 @@ def _make_divisible(v, divisor, min_value=None):
 class MobilenetV2_base(object):
     def __init__(self):
         self.model = None
-        print('\nBuilding MobileNet_V2...')
 
 
     def build_encoder(self, input_tensor_enc, output_stride=8, alpha=1.0, load_imagenet_weights=True):
-        print('Building encoder...')
+        print('\nBuilding encoder...')
 
         self.input = input_tensor_enc
         first_block_filters = _make_divisible(32 * alpha, 8)
@@ -269,8 +270,12 @@ class MobilenetV2_base(object):
                 print(f'Block: {block_id}')
                 print(input_tensor.shape, concat_tensor.shape)
                 tensor = UpSampling2D(size=(2,2),
-                                               data_format=K.image_data_format(),
-                                               interpolation='bilinear', name=f'upsampling_{block_id}')(tensor)
+                                      data_format=K.image_data_format(),
+                                      interpolation='bilinear', name=f'upsampling_{block_id}')(tensor)
+
+                # Ugly solution for input shape=(400,400,3)
+                if block_id == 25:
+                    tensor = Lambda(lambda x: x[:, :-1, :-1, :])(tensor)
                 tensor = Concatenate(name=f'concat_{block_id}')([tensor, concat_tensor])
             self.dec_conv = _inverted_res_block(tensor, filters=filters, alpha=alpha, stride=stride, dilation=dilation,
                                           expansion=6, block_id=block_id, use_shortcuts=True, prefix='dec')
@@ -278,12 +283,12 @@ class MobilenetV2_base(object):
 
 
         self.bottleneck = _inverted_res_block(encoder_model.output,
-                                              filters=160,
-                                              alpha=alpha,
-                                              stride=2, dilation=1,
-                                              expansion=6,
-                                              block_id=None, use_shortcuts=True, prefix='bottleneck')
-        # print(K.int_shape(input_tensor_dec)[-1])
+                                             filters=160,
+                                             alpha=alpha,
+                                             stride=2, dilation=1,
+                                             expansion=6,
+                                             block_id=None, use_shortcuts=True, prefix='bottleneck')
+
         self.upconv1 = upconv(input_tensor=self.bottleneck,
                               # concat_tensor=self.enc_conv15,
                               filters=160, stride=1,
@@ -394,7 +399,7 @@ class MobilenetV2_base(object):
                              padding='same',
                              activation='sigmoid',
                              name='segmentation_map')(self.upconv17)
-        # print(input_tensor_dec)
+        print(self.input, self.segmap)
         model = Model(inputs=self.input, outputs=self.segmap, name='mobilenetv2_decoder')
         return model
 
