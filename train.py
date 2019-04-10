@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
+from utils.utils import iou_metric, iou_loss
 
 
 BATCH_SIZE = 6
@@ -44,7 +45,7 @@ if __name__ == '__main__':
 
     # Define optimizer and compile model
     opt = keras.optimizers.Adam(lr=args.lr)
-    mobilenet.model.compile(optimizer=opt, loss='binary_crossentropy')
+    mobilenet.model.compile(optimizer=opt, loss=iou_loss, metrics=[iou_metric])
 
     # Get data generators
     train_generator = COCODataLoader(
@@ -62,7 +63,7 @@ if __name__ == '__main__':
 
     # Define callbacks
     model_checkpoint = ModelCheckpoint(
-        filepath='./checkpoints/mobilenet400-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
+        filepath='./checkpoints/mobilenet400_iou-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
         monitor = 'val_loss',
         verbose = 1,
         save_best_only = True,
