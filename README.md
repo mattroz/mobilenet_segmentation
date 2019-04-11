@@ -1,1 +1,1 @@
-UNet-MobileNetV2 encoder implementation.
+Implementation of UNet network with MobileNetV2 encoder.
