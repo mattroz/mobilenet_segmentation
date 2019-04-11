@@ -136,8 +136,9 @@ class MobilenetV2_base(object):
         self.model = None
 
 
-    def build_encoder(self, input_tensor_enc, output_stride=8, alpha=1.0, load_imagenet_weights=True):
+    def build_encoder(self, input_tensor_enc, output_stride=16, alpha=1.0, load_imagenet_weights=True):
         print('\nBuilding encoder...')
+        print(f'Output stride: {output_stride}')
 
         self.input = input_tensor_enc
         first_block_filters = _make_divisible(32 * alpha, 8)
@@ -276,6 +277,7 @@ class MobilenetV2_base(object):
                 # Ugly solution for input shape=(400,400,3)
                 if block_id == 25:
                     tensor = Lambda(lambda x: x[:, :-1, :-1, :])(tensor)
+
                 tensor = Concatenate(name=f'concat_{block_id}')([tensor, concat_tensor])
             self.dec_conv = _inverted_res_block(tensor, filters=filters, alpha=alpha, stride=stride, dilation=dilation,
                                           expansion=6, block_id=block_id, use_shortcuts=True, prefix='dec')
@@ -290,40 +292,25 @@ class MobilenetV2_base(object):
                                              block_id=None, use_shortcuts=True, prefix='bottleneck')
 
         self.upconv1 = upconv(input_tensor=self.bottleneck,
-                              # concat_tensor=self.enc_conv15,
                               filters=160, stride=1,
                               block_id=None)
         self.upconv2 = upconv(input_tensor=self.upconv1,
-                              # concat_tensor=self.enc_conv14,
                               filters=160, stride=1,
                               block_id=19)
         self.upconv3 = upconv(input_tensor=self.upconv2,
-                              # concat_tensor=self.enc_conv13,
                               filters=160, stride=1,
                               block_id=20)
 
-        if self.stride_left > 1:
-            strides = (2, 2)
-            dilation = 1
-            self.stride_left /= 2
-        else:
-            strides = (1, 1)
-            dilation = 2
-
         self.upconv4 = upconv(input_tensor=self.upconv3,
-                              # concat_tensor=self.enc_conv12,
-                              filters=96, stride=strides, dilation=dilation,
+                              filters=96, stride=1,
                               block_id=21)
         self.upconv5 = upconv(input_tensor=self.upconv4,
-                              # concat_tensor=self.enc_conv11,
                               filters=96, stride=1,
                               block_id=22)
         self.upconv6 = upconv(input_tensor=self.upconv5,
-                              # concat_tensor=self.enc_conv10,
                               filters=96, stride=1,
                               block_id=23)
         self.upconv7 = upconv(input_tensor=self.upconv6,
-                              # concat_tensor=self.enc_conv9,
                               filters=64, stride=1,
                               block_id=24)
         self.upconv8 = upconv(input_tensor=self.upconv7,
@@ -331,63 +318,34 @@ class MobilenetV2_base(object):
                               filters=64, stride=1,
                               block_id=25)
         self.upconv9 = upconv(input_tensor=self.upconv8,
-                              # concat_tensor=self.enc_conv7,
                               filters=64, stride=1,
                               block_id=26)
         self.upconv10 = upconv(input_tensor=self.upconv9,
-                              # concat_tensor=self.enc_conv6,
                               filters=64, stride=1,
                               block_id=27)
 
-        if self.stride_left > 1:
-            strides = (2, 2)
-            dilation = 1
-            self.stride_left /= 2
-        else:
-            strides = (1, 1)
-            dilation = 2
-
         self.upconv11 = upconv(input_tensor=self.upconv10,
                               concat_tensor=self.enc_conv5,
-                              filters=32, stride=strides, dilation=dilation,
+                              filters=32, stride=1,
                               block_id=28)
         self.upconv12 = upconv(input_tensor=self.upconv11,
-                              # concat_tensor=self.enc_conv4,
                               filters=32, stride=1,
                               block_id=29)
         self.upconv13 = upconv(input_tensor=self.upconv12,
-                              # concat_tensor=self.enc_conv3,
                               filters=32, stride=1,
                               block_id=30)
 
-        if self.stride_left > 1:
-            strides = (2, 2)
-            dilation = 1
-            self.stride_left /= 2
-        else:
-            strides = (1, 1)
-            dilation = 2
-
         self.upconv14 = upconv(input_tensor=self.upconv13,
                               concat_tensor=self.enc_conv2,
-                              filters=24, stride=strides, dilation=dilation,
+                              filters=24, stride=1,
                               block_id=31)
         self.upconv15 = upconv(input_tensor=self.upconv14,
-                              # concat_tensor=self.enc_conv1,
                               filters=24, stride=1,
                               block_id=32)
 
-        if self.stride_left > 1:
-            strides = (2, 2)
-            dilation = 1
-            self.stride_left /= 2
-        else:
-            strides = (1, 1)
-            dilation = 2
-
         self.upconv16 = upconv(input_tensor=self.upconv15,
                               concat_tensor=self.enc_conv0,
-                              filters=16, stride=strides, dilation=dilation,
+                              filters=16, stride=1,
                               block_id=33)
         self.upconv17 = upconv(input_tensor=self.upconv16,
                               concat_tensor=self.input,
