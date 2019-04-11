@@ -35,5 +35,9 @@ def iou_metric(y_true, y_pred, smooth=1):
     union = K.sum(y_true, axis=[1,2]) + K.sum(y_pred, axis=[1,2])
     return K.mean((2. * intersection + smooth) / (union + smooth), axis=0)
 
-def iou_loss(y_true, y_pred):
+def dice_loss(y_true, y_pred):
     return 1 - iou_metric(y_true, y_pred)
+
+def bce_dice_loss(y_true, y_pred):
+    loss = K.binary_crossentropy(y_true, y_pred) - K.log(iou_metric(y_true, y_pred))
+    return loss
