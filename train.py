@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
-from utils.utils import iou_metric, iou_loss
+from utils.utils import iou_metric, dice_loss, bce_dice_loss
 
 
 BATCH_SIZE = 6
@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     # Define optimizer and compile model
     opt = keras.optimizers.Adam(lr=args.lr)
-    mobilenet.model.compile(optimizer=opt, loss=iou_loss, metrics=[iou_metric])
+    mobilenet.model.compile(optimizer=opt, loss=bce_dice_loss, metrics=[iou_metric])
 
     # Get data generators
     train_generator = COCODataLoader(
