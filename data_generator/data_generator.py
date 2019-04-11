@@ -78,11 +78,11 @@ class COCODataLoader(Sequence):
             # Augmentations
             if self.augmentations:
                 aug = Compose([
-                    HorizontalFlip( p=.3),
+                    HorizontalFlip( p=.45),
                     RandomSizedCrop(p=.15, min_max_height=(10, 220), height=self.resize[0], width=self.resize[1]),
                     GridDistortion( p=.1, border_mode=0, distort_limit=0.1),
                     ElasticTransform(p=.1, alpha=10, sigma=120 * 0.5, alpha_affine=120 * 0.05),
-                    ShiftScaleRotate(p=.2, border_mode=0, shift_limit=0.04, scale_limit=0.05),
+                    ShiftScaleRotate(p=.3, border_mode=0, shift_limit=0.04, scale_limit=0.05),
                     OneOf([
                         RandomBrightnessContrast(p=.3),
                         RandomGamma(p=.3)
