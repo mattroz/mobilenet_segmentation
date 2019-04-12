@@ -31,7 +31,9 @@ if __name__ == '__main__':
 
     # Load saved model if specified
     if args.model is not None:
-        mobilenet.model = keras.models.load_model(args.model,custom_objects={'relu6' : relu6})
+        mobilenet.model = keras.models.load_model(args.model,custom_objects={'relu6' : relu6,
+                                                                            'iou_metric' : iou_metric,
+                                                                            'bce_dice_loss' : bce_dice_loss})
 
     # Freeze encoder layers which are pretrained
     # if args.freeze_encoder:
