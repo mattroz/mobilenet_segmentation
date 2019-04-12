@@ -57,7 +57,7 @@ class COCODataLoader(Sequence):
         for desc in batch_descriptions:
             # Load image
             image_filename = os.path.join(self.path_to_images, desc['file_name'])
-            image = img_to_array(load_img(image_filename))
+            image = img_to_array(load_img(image_filename)) / 255.
 
             # Load masks for this image
             batch_annotations_ids = self.dataset.getAnnIds(imgIds=desc['id'], catIds=self.categories_ids, iscrowd=None)
@@ -72,7 +72,6 @@ class COCODataLoader(Sequence):
             # Resize image and mask
             if self.resize:
                 image = skt.resize(image, self.resize, anti_aliasing=False)
-                image /= 255.0
                 mask = np.round(skt.resize(mask, self.resize, anti_aliasing=False))
 
             # Augmentations
