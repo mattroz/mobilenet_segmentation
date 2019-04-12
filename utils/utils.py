@@ -27,7 +27,7 @@ def visualize(image, mask, original_image=None, original_mask=None):
         ax[1, 1].imshow(mask)
         ax[1, 1].set_title('Predicted mask', fontsize=fontsize)
 
-        
+# IoU approximation for segmentaton: http://www.cs.umanitoba.ca/~ywang/papers/isvc16.pdf        
 def iou_metric(y_true, y_pred, smooth=1):
     y_pred = K.cast(y_pred, dtype=tf.float32)
     y_true = K.cast(y_true, dtype=tf.float32)
