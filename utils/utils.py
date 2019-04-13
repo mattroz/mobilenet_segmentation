@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import keras.backend as K
 
 # Function was forked from https://github.com/albu/albumentations/blob/master/notebooks/example_kaggle_salt.ipynb
-def visualize(image, mask, original_image=None, original_mask=None):
+def visualize(image, mask, original_image=None, original_mask=None, name=None, show=False):
     fontsize = 18
 
     if original_image is None and original_mask is None:
@@ -26,6 +26,9 @@ def visualize(image, mask, original_image=None, original_mask=None):
 
         ax[1, 1].imshow(mask)
         ax[1, 1].set_title('Predicted mask', fontsize=fontsize)
+    
+    if name is not None:
+        plt.savefig(name)
 
 # IoU approximation for segmentaton: http://www.cs.umanitoba.ca/~ywang/papers/isvc16.pdf        
 def iou_metric(y_true, y_pred, smooth=1):
@@ -34,6 +37,14 @@ def iou_metric(y_true, y_pred, smooth=1):
     intersection = K.sum(K.abs(y_true * y_pred), axis=[1,2])
     union = K.sum(y_true, axis=[1,2]) + K.sum(y_pred, axis=[1,2])
     return K.mean((2. * intersection + smooth) / (union + smooth), axis=0)
+
+
+def iou_for_image(y_true, y_pred, smooth=1):
+    y_pred = K.cast(y_pred, dtype=tf.float32)
+    y_true = K.cast(y_true, dtype=tf.float32)
+    intersection = K.sum(K.abs(y_true * y_pred), axis=[1,2])
+    union = K.sum(y_true, axis=[1,2]) + K.sum(y_pred, axis=[1,2])
+    return (2. * intersection + smooth) / (union + smooth) 
 
 
 def dice_loss(y_true, y_pred):
