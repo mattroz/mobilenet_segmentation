@@ -60,7 +60,7 @@ class COCODataLoader(Sequence):
             image = img_to_array(load_img(image_filename)) / 255.
 
             # Load masks for this image
-            batch_annotations_ids = self.dataset.getAnnIds(imgIds=desc['id'], catIds=self.categories_ids, iscrowd=None)
+            batch_annotations_ids = self.dataset.getAnnIds(imgIds=desc['id'], catIds=self.categories_ids, iscrowd=False)
             annotations = self.dataset.loadAnns(batch_annotations_ids)
             mask = self.dataset.annToMask(annotations[0])
             for i in range(len(annotations)):
