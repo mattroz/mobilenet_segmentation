@@ -31,18 +31,20 @@ if __name__ == '__main__':
 
     # Load saved model if specified
     if args.model is not None:
-        mobilenet.model = keras.models.load_model(args.model,custom_objects={'relu6' : relu6,
-                                                                            'iou_metric' : iou_metric,
-                                                                            'bce_dice_loss' : bce_dice_loss})
+        mobilenet.model = keras.models.load_model(args.model,
+                                                  custom_objects={'relu6' : relu6,
+                                                                  'iou_metric' : iou_metric,
+                                                                  'bce_dice_loss' : bce_dice_loss},
+                                                  compile=False)
 
     # Freeze encoder layers which are pretrained
-    # if args.freeze_encoder:
-    #     for layer in mobilenet.model.layers:
-    #         if layer.name.startswith('enc'):
-    #             layer.trainable=False
-    # else:
-    # for layer in mobilenet.model.layers:
-    #     layer.trainable=True
+    if args.freeze_encoder:
+        for layer in mobilenet.model.layers:
+            if layer.name.startswith('enc'):
+                layer.trainable=False
+    else:
+        for layer in mobilenet.model.layers:
+            layer.trainable=True
     print(mobilenet.model.summary())
 
     # Define optimizer and compile model
@@ -65,7 +67,7 @@ if __name__ == '__main__':
 
     # Define callbacks
     model_checkpoint = ModelCheckpoint(
-        filepath='./checkpoints/mobilenet400_iou_no_dil-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
+        filepath='./checkpoints/mobilenet400_iou_no_dil_no_crowd-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
         monitor = 'val_loss',
         verbose = 1,
         save_best_only = True,
