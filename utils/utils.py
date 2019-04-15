@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import keras.backend as K
 
 # Function was forked from https://github.com/albu/albumentations/blob/master/notebooks/example_kaggle_salt.ipynb
-def visualize(image, mask, original_image=None, original_mask=None, name=None, show=False):
+def visualize(image, mask, original_image=None, original_mask=None, name=None):
     fontsize = 18
 
     if original_image is None and original_mask is None:
