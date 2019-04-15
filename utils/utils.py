@@ -1,3 +1,4 @@
+import time
 import skimage.io as io
 import numpy as np
 import tensorflow as tf
@@ -27,11 +28,11 @@ def visualize(image, mask, original_image=None, original_mask=None, name=None, s
 
         ax[1, 1].imshow(mask)
         ax[1, 1].set_title('Predicted mask', fontsize=fontsize)
-    
+
     if name is not None:
         plt.savefig(name)
 
-# IoU approximation for segmentaton: http://www.cs.umanitoba.ca/~ywang/papers/isvc16.pdf        
+# IoU approximation for segmentaton: http://www.cs.umanitoba.ca/~ywang/papers/isvc16.pdf
 def iou_metric(y_true, y_pred, smooth=1):
     y_pred = K.cast(y_pred, dtype=tf.float32)
     y_true = K.cast(y_true, dtype=tf.float32)
@@ -41,12 +42,11 @@ def iou_metric(y_true, y_pred, smooth=1):
 
 
 def iou_for_image(y_true, y_pred, smooth=1):
-    y_pred = K.cast(y_pred, dtype=tf.float32)
-    y_true = K.cast(y_true, dtype=tf.float32)
-    intersection = K.sum(K.abs(y_true * y_pred), axis=[1,2])
-    union = K.sum(y_true, axis=[1,2]) + K.sum(y_pred, axis=[1,2])
-    return (2. * intersection + smooth) / (union + smooth) 
-
+    y_pred = K.get_value(y_pred)
+    intersection = np.sum(np.abs(y_true * y_pred), axis=(1,2))
+    union = np.sum(y_true, axis=(1,2)) + np.sum(y_pred, axis=(1,2))
+    iou = (2. * intersection + smooth) / (union + smooth)
+    return iou
 
 def dice_loss(y_true, y_pred):
     return 1 - iou_metric(y_true, y_pred)
@@ -65,7 +65,8 @@ def get_precision(y_true, y_pred, threshold):
     #   - GT mask empty, your prediction empty: (i.e. TN) ==> precision = 1
     #   - GT mask non-empty, your prediction non-empty: (i.e. TP) ==> precision = [IoU(GT, pred) > threshold]
     # But here is the easiest case - binary segmentation, i.e. it is sufficient to calculate only IoU > threshold
-    return np.asarray(K.get_value(iou_for_image(y_true, y_pred)) > threshold, dtype=np.int8)
+    precision = np.asarray(iou_for_image(y_true, y_pred) > threshold, dtype=np.int8)
+    return precision
 
 
 def get_multi_threshold_precision(precision):
