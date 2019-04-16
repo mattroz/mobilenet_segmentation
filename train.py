@@ -3,7 +3,7 @@ import keras
 import numpy as np
 
 from math import ceil
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, TerminateOnNaN
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau
 from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
@@ -19,7 +19,7 @@ INPUT_SHAPE = (400, 400, 3)
 if __name__ == '__main__':
     argparser = ArgumentParser()
     argparser.add_argument('--initial_epoch', type=int, required=True)
-    argparser.add_argument('--final_epoch', type=int, required=False, default=100)
+    argparser.add_argument('--final_epoch', type=int, required=False, default=EPOCHS)
     argparser.add_argument('--model', type=str, required=False, default=None)
     argparser.add_argument('--freeze_encoder', default=False, required=False, dest='freeze_encoder', action='store_true')
     argparser.add_argument('--lr', type=float, required=False, default=LR)
