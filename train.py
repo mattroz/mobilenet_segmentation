@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
 from utils.utils import iou_metric, dice_loss, bce_dice_loss
+from utils.cyclic_learning_rate import CyclicLearningRateScheduler
 
 
 BATCH_SIZE = 6
@@ -82,7 +83,12 @@ if __name__ == '__main__':
         verbose=1,
         min_lr=1e-9)
 
-    callbacks = [model_checkpoint, plateau_reducer_checkpoint]
+    # cyclic_learning_rate = CyclicLearningRateScheduler(
+    #     base_lr=1e-6,
+    #     max_lr=1e-2,
+    #     step_size=4.835 * ceil(len(train_generator) / BATCH_SIZE))
+
+    callbacks = [model_checkpoint, plateau_reducer_checkpoint]#, cyclic_learning_rate]
 
     print('\nTraining...')
     train_history = mobilenet.model.fit_generator(
