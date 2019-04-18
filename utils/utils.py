@@ -32,6 +32,7 @@ def visualize(image, mask, original_image=None, original_mask=None, name=None):
     if name is not None:
         plt.savefig(name)
 
+
 # IoU approximation for segmentaton: http://www.cs.umanitoba.ca/~ywang/papers/isvc16.pdf
 def iou_metric(y_true, y_pred, smooth=1):
     y_pred = K.cast(y_pred, dtype=tf.float32)
@@ -48,6 +49,21 @@ def iou_for_image(y_true, y_pred, smooth=1):
     iou = (2. * intersection + smooth) / (union + smooth)
     return iou
 
+
+def binary_focal_loss(y_true, y_pred, alpha=0.25, gamma=2.0):
+    """Binary focal loss"""
+    pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
+    pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
+
+    epsilon = K.epsilon()
+    # clip to prevent NaN's and Inf's
+    pt_1 = K.clip(pt_1, epsilon, 1. - epsilon)
+    pt_0 = K.clip(pt_0, epsilon, 1. - epsilon)
+
+    return -K.sum(alpha * K.pow(1. - pt_1, gamma) * K.log(pt_1)) \
+           - K.sum((1 - alpha) * K.pow(pt_0, gamma) * K.log(1. - pt_0))
+
+
 def dice_loss(y_true, y_pred):
     return 1 - iou_metric(y_true, y_pred)
 
@@ -55,6 +71,12 @@ def dice_loss(y_true, y_pred):
 def bce_dice_loss(y_true, y_pred):
     loss = K.binary_crossentropy(y_true, y_pred) - K.log(iou_metric(y_true, y_pred))
     return loss
+
+
+def focal_dice_loss(y_true, y_pred):
+    loss = binary_focal_loss(y_true, y_pred) - K.log(iou_metric(y_true, y_pred))
+    return loss
+
 
 # Calculate IoU-over-threshold metric from Kaggle TGS Salt competition
 # Excellent explanation: https://www.kaggle.com/pestipeti/explanation-of-scoring-metric
