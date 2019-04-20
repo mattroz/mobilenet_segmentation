@@ -3,12 +3,12 @@ import keras
 import numpy as np
 
 from math import ceil
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
 from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
-from utils.utils import iou_metric, dice_loss, bce_dice_loss
+from utils.utils import iou_metric, dice_loss, bce_dice_loss, focal_dice_loss
 from utils.cyclic_learning_rate import CyclicLearningRateScheduler
 
 
@@ -35,7 +35,8 @@ if __name__ == '__main__':
         mobilenet.model = keras.models.load_model(args.model,
                                                   custom_objects={'relu6' : relu6,
                                                                   'iou_metric' : iou_metric,
-                                                                  'bce_dice_loss' : bce_dice_loss},
+                                                                  'bce_dice_loss' : bce_dice_loss,
+                                                                  'focal_dice_loss' : focal_dice_loss},
                                                   compile=False)
 
     # Freeze encoder layers which are pretrained
@@ -68,7 +69,7 @@ if __name__ == '__main__':
 
     # Define callbacks
     model_checkpoint = ModelCheckpoint(
-        filepath='./checkpoints/mobilenet400_iou_no_dil_no_crowd-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
+        filepath='./checkpoints/mobilenet400_test-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
         monitor = 'val_loss',
         verbose = 1,
         save_best_only = True,
@@ -78,17 +79,18 @@ if __name__ == '__main__':
 
     plateau_reducer_checkpoint = ReduceLROnPlateau(
         monitor='val_loss',
-        factor=0.7,
-        patience=7,
+        factor=0.6,
+        patience=5,
         verbose=1,
         min_lr=1e-9)
 
-    # cyclic_learning_rate = CyclicLearningRateScheduler(
-    #     base_lr=1e-6,
-    #     max_lr=1e-2,
-    #     step_size=4.835 * ceil(len(train_generator) / BATCH_SIZE))
+    cyclic_learning_rate = CyclicLearningRateScheduler(
+        base_lr=1e-6,
+        max_lr=1e-2,
+        step_size=5 * ceil(len(train_generator) / BATCH_SIZE),
+        search_optimal_bounds=True)
 
-    callbacks = [model_checkpoint, plateau_reducer_checkpoint]#, cyclic_learning_rate]
+    callbacks = [model_checkpoint, plateau_reducer_checkpoint, cyclic_learning_rate]
 
     print('\nTraining...')
     train_history = mobilenet.model.fit_generator(
