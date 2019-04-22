@@ -21,15 +21,33 @@ from albumentations import (
 
 
 class COCODataLoader(Sequence):
-    """
-    """
+    """COCO dataset loader based on provided COCO API."""
 
-    def __init__(self, batch_size,
+    def __init__(self,
+                 batch_size,
                  path_to_annotations,
                  path_to_images,
                  resize=(480,480),
                  shuffle=True,
                  augmentations=True):
+        """
+        Parameters
+        ----------
+
+        batch_size: int
+                Number of batches to return.
+        path_to_annotations: str
+                Path to COCO annotation file.
+        path_to_images: str
+                Path to directory with images.
+        resize: tuple of ints
+                Specifies resizing shape.
+        shuffle: bool
+                Specifies if dataset should be shuffled.
+        augmentations: bool
+                Specifies if augmentations should be applied to batch.
+        """
+
         print(f'\nLoading COCO dataset from {path_to_images}')
         self.dataset = COCO(path_to_annotations)
         self.path_to_images = path_to_images
@@ -60,7 +78,7 @@ class COCODataLoader(Sequence):
             image = img_to_array(load_img(image_filename)) / 255.
 
             # Load masks for this image
-            batch_annotations_ids = self.dataset.getAnnIds(imgIds=desc['id'], catIds=self.categories_ids, iscrowd=False)
+            batch_annotations_ids = self.dataset.getAnnIds(imgIds=desc['id'], catIds=self.categories_ids, iscrowd=None)
             annotations = self.dataset.loadAnns(batch_annotations_ids)
             mask = self.dataset.annToMask(annotations[0])
             for i in range(len(annotations)):
@@ -77,16 +95,16 @@ class COCODataLoader(Sequence):
             # Augmentations
             if self.augmentations:
                 aug = Compose([
-                    HorizontalFlip( p=.45),
-                    RandomSizedCrop(p=.15, min_max_height=(10, 220), height=self.resize[0], width=self.resize[1]),
-                    GridDistortion( p=.1, border_mode=0, distort_limit=0.1),
-                    ElasticTransform(p=.1, alpha=10, sigma=120 * 0.5, alpha_affine=120 * 0.05),
-                    ShiftScaleRotate(p=.3, border_mode=0, shift_limit=0.04, scale_limit=0.05),
+                    HorizontalFlip( p=.5),
+                    RandomSizedCrop(p=.35, min_max_height=(10, 220), height=self.resize[0], width=self.resize[1]),
+                    GridDistortion( p=.2, border_mode=0, distort_limit=0.1),
+                    ElasticTransform(p=.25, alpha=10, sigma=120 * 0.5, alpha_affine=120 * 0.05),
+                    ShiftScaleRotate(p=.4, border_mode=0, shift_limit=0.04, scale_limit=0.03),
                     OneOf([
-                        RandomBrightnessContrast(p=.3),
-                        RandomGamma(p=.3)
-                    ], p=.3)
-                ])
+                        RandomBrightnessContrast(p=.8),
+                        RandomGamma(p=.9)
+                    ], p=1)
+                ], p=1.)
                 augmented = aug(image=image, mask=mask)
                 image = augmented['image']
                 mask = augmented['mask']
