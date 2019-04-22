@@ -1,15 +1,13 @@
-import os
 import keras
-import numpy as np
 
 from math import ceil
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, CSVLogger
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau
 from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
 from utils.utils import iou_metric, dice_loss, bce_dice_loss, focal_dice_loss
-from utils.cyclic_learning_rate import CyclicLearningRateScheduler
+from utils.cyclical_learning_rate import CyclicalLearningRateScheduler
 
 
 BATCH_SIZE = 6
@@ -69,7 +67,7 @@ if __name__ == '__main__':
 
     # Define callbacks
     model_checkpoint = ModelCheckpoint(
-        filepath='./checkpoints/mobilenet400_test-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
+        filepath='./checkpoints/mobilenet400_clr-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
         monitor = 'val_loss',
         verbose = 1,
         save_best_only = True,
@@ -84,11 +82,11 @@ if __name__ == '__main__':
         verbose=1,
         min_lr=1e-9)
 
-    cyclic_learning_rate = CyclicLearningRateScheduler(
-        base_lr=1e-6,
-        max_lr=1e-2,
-        step_size=5 * ceil(len(train_generator) / BATCH_SIZE),
-        search_optimal_bounds=True)
+    cyclic_learning_rate = CyclicalLearningRateScheduler(
+        base_lr=1e-7,
+        max_lr=0.02,
+        step_size=4.73 * ceil(len(train_generator) / BATCH_SIZE),
+        search_optimal_bounds=False)
 
     callbacks = [model_checkpoint, plateau_reducer_checkpoint, cyclic_learning_rate]
 

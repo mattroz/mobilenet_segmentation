@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
-from utils.utils import visualize, bce_dice_loss, iou_metric, iou_for_image, get_precision, get_multi_threshold_precision
+from utils.utils import bce_dice_loss, get_precision, get_multi_threshold_precision
 
 from utils.utils import iou_metric
 
@@ -39,21 +39,27 @@ def main():
 
 
     thresholds = np.arange(0.5, 1, 0.05)
+
     # Calculate mIoU over all validation batches
     mIoU = np.array([])
 
     import time
     print(f"\nEvaluating with batch size {BATCH_SIZE} ...")
     for i in tqdm(range(0, len(val_generator))):
+        # Get predictions and prepare data for evaluating
         images, masks = val_generator[i]
         pred_mask = mobilenet.model.predict(images)
         pred_mask = keras.backend.cast(pred_mask, dtype=tf.float64)
         pred_mask = keras.backend.squeeze(pred_mask, axis=-1)
         masks = np.squeeze(masks)
         IoU = np.zeros((BATCH_SIZE,1))
+
+        # Calculate IoU over all thresholds
         for threshold in thresholds:
             iou_over_threshold = np.reshape(get_precision(masks, pred_mask, threshold), (-1,1))
             IoU = np.concatenate((IoU, iou_over_threshold), axis=1)
+
+        # Get mean IoU over thresholds over current batche
         mean_iou_over_threshold = np.mean(get_multi_threshold_precision(IoU[:, 1:]))
         mIoU = np.append(mIoU, mean_iou_over_threshold)
         with open('./results/metrics_log.txt', 'a') as f:
