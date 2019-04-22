@@ -7,10 +7,25 @@ import matplotlib.pyplot as plt
 
 
 class CyclicalLearningRateScheduler(keras.callbacks.History):
-    """
-    """
+    """ Class which is responsible for cyclical learning rate scheduling."""
 
     def __init__(self, base_lr, max_lr, step_size, search_optimal_bounds=False):
+        """
+        Current version uses triangular learning rate policy.
+
+        Parameters
+        ----------
+
+        base_lr: float
+                Minimal bound for learning rate.
+        max_lr: float
+                Maximum bound for learning rate
+        step_size: int, float
+                Number of epochs during which lr will be increasing and decreasing.
+                One cycle is 2 * step_size
+        search_optimal_bounds: bool
+                If specified, optimal bounds will be find during several epochs of training.
+        """
 
         super(CyclicalLearningRateScheduler, self).__init__()
 
@@ -47,6 +62,12 @@ class CyclicalLearningRateScheduler(keras.callbacks.History):
         K.set_value(self.model.optimizer.lr, updated_lr)
 
     def __calculate_optimal_bounds(self):
+        """Calculates new base_lr and max_lr based on training results.
+
+        return: float, float
+                new_base_lr, new_max_lr
+        """
+
         self.search_lrs = np.reshape(self.search_lrs, (-1, 1))
         self.losses = np.reshape(self.losses, (-1, 1))
         averaged_losses = np.array(self.losses[0])
@@ -69,7 +90,9 @@ class CyclicalLearningRateScheduler(keras.callbacks.History):
                 print("Stop searching for optimal bounds, calculating...")
                 self.base_lr, self.max_lr = self.__calculate_optimal_bounds()
                 print(f"Set base_lr: {self.base_lr}, max_lr: {self.max_lr}")
-                self.search_optimal_bounds = False
+
                 print(f"Reinitializing model...")
                 self.model.set_weights(self.initial_weights)
                 del self.initial_weights
+
+                self.search_optimal_bounds = False
