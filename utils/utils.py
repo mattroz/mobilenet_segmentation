@@ -7,6 +7,21 @@ import keras.backend as K
 
 # Function was forked from https://github.com/albu/albumentations/blob/master/notebooks/example_kaggle_salt.ipynb
 def visualize(image, mask, original_image=None, original_mask=None, name=None):
+    """
+    Function for two image-mask pairs visualizing.
+
+    image: numpy array
+        First image to visualize.
+    mask: numpy array
+        Mask for the first image.
+    original_image: numpy array
+        Second image to visualize
+    original_mask: numpy array
+        Mask for the second image
+    name: str
+        If specified, produced plot will be saved under this name
+    """
+
     fontsize = 18
 
     if original_image is None and original_mask is None:
@@ -33,8 +48,23 @@ def visualize(image, mask, original_image=None, original_mask=None, name=None):
         plt.savefig(name)
 
 
-# IoU approximation for segmentaton: http://www.cs.umanitoba.ca/~ywang/papers/isvc16.pdf
+# IoU approximation for segmentaton:
 def iou_metric(y_true, y_pred, smooth=1):
+    """Calculates Intersection-over-Union metric across batch axis.
+
+    Paper: http://www.cs.umanitoba.ca/~ywang/papers/isvc16.pdf
+
+    y_true: tf.Tensor
+        Original labels (mask).
+    y_pred: tf.Tensor
+        Predicted labels (mask).
+    smooth: int, float
+        Smoothing constant for boundary cases.
+
+    :return: tf.Tensor
+        Mean IoU across batch axis.
+    """
+
     y_pred = K.cast(y_pred, dtype=tf.float32)
     y_true = K.cast(y_true, dtype=tf.float32)
     intersection = K.sum(K.abs(y_true * y_pred), axis=[1,2])
@@ -43,6 +73,19 @@ def iou_metric(y_true, y_pred, smooth=1):
 
 
 def iou_for_image(y_true, y_pred, smooth=1):
+    """Calculates Intersection-over-Union for two masks.
+
+    y_true: tf.Tensor
+        Original labels (mask).
+    y_pred: tf.Tensor
+        Predicted labels (mask).
+    smooth: int, float
+        Smoothing constant for boundary cases.
+
+    :return: scalar
+        IoU for two masks.
+    """
+
     y_pred = K.get_value(y_pred)
     intersection = np.sum(np.abs(y_true * y_pred), axis=(1,2))
     union = np.sum(y_true, axis=(1,2)) + np.sum(y_pred, axis=(1,2))
@@ -51,12 +94,26 @@ def iou_for_image(y_true, y_pred, smooth=1):
 
 
 def binary_focal_loss(y_true, y_pred, alpha=0.25, gamma=2.0):
-    """Binary focal loss"""
+    """Calculates binary focal loss.
+
+    y_true: tf.Tensor
+        Original labels (mask).
+    y_pred: tf.Tensor
+        Predicted labels (mask).
+    alpha: float
+        Tunable parameter.
+    gamma: float
+        Tunable parameter.
+
+    :return: tf.Tensor.
+    """
+
     pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
     pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
 
     epsilon = K.epsilon()
     # clip to prevent NaN's and Inf's
+
     pt_1 = K.clip(pt_1, epsilon, 1. - epsilon)
     pt_0 = K.clip(pt_0, epsilon, 1. - epsilon)
 
@@ -65,15 +122,49 @@ def binary_focal_loss(y_true, y_pred, alpha=0.25, gamma=2.0):
 
 
 def dice_loss(y_true, y_pred):
-    return 1 - iou_metric(y_true, y_pred)
+    """Calculates Dice loss, which is (1 - IoU)
+
+    y_true: tf.Tensor
+        Original labels (mask).
+    y_pred: tf.Tensor
+        Predicted labels (mask).
+
+    :return: tf.Tensor.
+    """
+
+    return (1 - iou_metric(y_true, y_pred))
 
 
 def bce_dice_loss(y_true, y_pred):
-    loss = K.binary_crossentropy(y_true, y_pred) - K.log(iou_metric(y_true, y_pred))
+    """Calculates binary crossentropy dice loss.
+
+    Calculates as [BCE - log(IoU)]
+
+    y_true: tf.Tensor
+        Original labels (mask).
+    y_pred: tf.Tensor
+        Predicted labels (mask).
+
+    :return: tf.Tensor
+    """
+
+    loss = K.mean(K.binary_crossentropy(y_true, y_pred)) - K.log(iou_metric(y_true, y_pred))
     return loss
 
 
 def focal_dice_loss(y_true, y_pred):
+    """Calculates focal dice loss.
+
+    Calculates as [focal_loss - log(IoU)]
+
+    y_true: tf.Tensor
+        Original labels (mask).
+    y_pred: tf.Tensor
+        Predicted labels (mask).
+
+    :return: tf.Tensor
+    """
+
     loss = binary_focal_loss(y_true, y_pred) - K.log(iou_metric(y_true, y_pred))
     return loss
 
