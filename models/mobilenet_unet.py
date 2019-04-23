@@ -274,8 +274,8 @@ class MobilenetV2_base(object):
                                       data_format=K.image_data_format(),
                                       interpolation='bilinear', name=f'upsampling_{block_id}')(tensor)
 
-                # Ugly solution for input shape=(400,400,3)
-                if block_id == 25:
+                # Ugly solution for input shape=(401,401,3)
+                if block_id > 25:
                     tensor = Lambda(lambda x: x[:, :-1, :-1, :])(tensor)
 
                 tensor = Concatenate(name=f'concat_{block_id}')([tensor, concat_tensor])

@@ -13,7 +13,7 @@ from utils.cyclical_learning_rate import CyclicalLearningRateScheduler
 BATCH_SIZE = 6
 LR = 1e-3
 EPOCHS = 100
-INPUT_SHAPE = (400, 400, 3)
+INPUT_SHAPE = (401, 401, 3)
 
 if __name__ == '__main__':
     argparser = ArgumentParser()
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     # Define callbacks
     model_checkpoint = ModelCheckpoint(
-        filepath='./checkpoints/mobilenet400_clr-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
+        filepath='./checkpoints/mobilenet401_clr-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
         monitor = 'val_loss',
         verbose = 1,
         save_best_only = True,
@@ -85,10 +85,10 @@ if __name__ == '__main__':
     cyclic_learning_rate = CyclicalLearningRateScheduler(
         base_lr=1e-7,
         max_lr=0.02,
-        step_size=4.73 * ceil(len(train_generator) / BATCH_SIZE),
+        step_size=5 * ceil(len(train_generator) / BATCH_SIZE),
         search_optimal_bounds=False)
 
-    callbacks = [model_checkpoint, plateau_reducer_checkpoint, cyclic_learning_rate]
+    callbacks = [model_checkpoint, cyclic_learning_rate]#plateau_reducer_checkpoint
 
     print('\nTraining...')
     train_history = mobilenet.model.fit_generator(
