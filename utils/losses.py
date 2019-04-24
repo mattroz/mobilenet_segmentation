@@ -214,8 +214,7 @@ def lovasz_hinge_flat(logits, labels):
                    lambda: tf.reduce_sum(logits) * 0.,
                    compute_loss,
                    strict=True,
-                   name="loss"
-                   )
+                   name="loss")
     return loss
 
 
@@ -232,6 +231,7 @@ def flatten_binary_scores(scores, labels, ignore=None):
     vscores = tf.boolean_mask(scores, valid, name='valid_scores')
     vlabels = tf.boolean_mask(labels, valid, name='valid_labels')
     return vscores, vlabels
+
 
 def lovasz_hinge_loss(y_true, y_pred):
     return lovasz_hinge(y_pred, y_true, per_image=False, ignore=None)

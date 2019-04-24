@@ -62,10 +62,8 @@ class COCODataLoader(Sequence):
         if self.shuffle:
             np.random.shuffle(self.images_descriptions)
 
-
     def __len__(self):
         return int(np.ceil(len(self.images_ids) / float(self.batch_size)))
-
 
     def __getitem__(self, index):
         images = []
@@ -96,14 +94,14 @@ class COCODataLoader(Sequence):
             if self.augmentations:
                 aug = Compose([
                     HorizontalFlip( p=.5),
-                    RandomSizedCrop(p=.35, min_max_height=(10, 220), height=self.resize[0], width=self.resize[1]),
+                    RandomSizedCrop(p=.35, min_max_height=(10, self.resize[0]-30), height=self.resize[0], width=self.resize[1]),
                     GridDistortion( p=.2, border_mode=0, distort_limit=0.1),
                     ElasticTransform(p=.25, alpha=10, sigma=120 * 0.5, alpha_affine=120 * 0.05),
                     ShiftScaleRotate(p=.4, border_mode=0, shift_limit=0.04, scale_limit=0.03),
                     OneOf([
                         RandomBrightnessContrast(p=.8),
                         RandomGamma(p=.9)
-                    ], p=1)
+                    ], p=.5)
                 ], p=1.)
                 augmented = aug(image=image, mask=mask)
                 image = augmented['image']
@@ -113,7 +111,6 @@ class COCODataLoader(Sequence):
             masks.append(mask)
 
         return np.asanyarray(images), np.expand_dims(masks, axis=-1)
-
 
     def on_epoch_end(self):
         if self.shuffle:

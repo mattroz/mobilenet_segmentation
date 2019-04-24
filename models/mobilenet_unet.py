@@ -80,13 +80,6 @@ from keras.layers import ZeroPadding2D
 from keras.layers import GlobalAveragePooling2D
 from keras.layers import Add
 from keras.layers import Concatenate
-from keras.layers import Flatten
-from keras.layers import Dense
-from keras.layers import LeakyReLU
-from keras import initializers
-from keras import regularizers
-from keras import constraints
-from keras.utils import conv_utils
 from keras.utils.data_utils import get_file
 from keras.engine import get_source_inputs
 from keras import backend as K
@@ -134,7 +127,6 @@ def _make_divisible(v, divisor, min_value=None):
 class MobilenetV2_base(object):
     def __init__(self):
         self.model = None
-
 
     def build_encoder(self, input_tensor_enc, output_stride=16, alpha=1.0, load_imagenet_weights=True):
         print('\nBuilding encoder...')
