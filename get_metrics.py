@@ -8,9 +8,9 @@ from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
-from utils.utils import bce_dice_loss, get_precision, get_multi_threshold_precision
+from utils.losses import bce_dice_loss, get_precision, get_multi_threshold_precision
 
-from utils.utils import iou_metric
+from utils.losses import iou_metric
 
 
 BATCH_SIZE = 32
