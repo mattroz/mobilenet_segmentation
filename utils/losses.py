@@ -232,3 +232,6 @@ def flatten_binary_scores(scores, labels, ignore=None):
     vscores = tf.boolean_mask(scores, valid, name='valid_scores')
     vlabels = tf.boolean_mask(labels, valid, name='valid_labels')
     return vscores, vlabels
+
+def lovasz_hinge_loss(y_true, y_pred):
+    return lovasz_hinge(y_pred, y_true, per_image=False, ignore=None)
