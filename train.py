@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
-from utils.losses import iou_metric, dice_loss, bce_dice_loss, focal_dice_loss
+from utils.losses import iou_metric, lovasz_hinge_loss, bce_dice_loss, focal_dice_loss
 from utils.cyclical_learning_rate import CyclicalLearningRateScheduler
 
 
@@ -22,6 +22,7 @@ if __name__ == '__main__':
     argparser.add_argument('--model', type=str, required=False, default=None)
     argparser.add_argument('--freeze_encoder', default=False, required=False, dest='freeze_encoder', action='store_true')
     argparser.add_argument('--lr', type=float, required=False, default=LR)
+    argparser.add_argument('--loss', type=str, default='bce_dice', required=False)
     args = argparser.parse_args()
 
     # Get the model
@@ -49,6 +50,15 @@ if __name__ == '__main__':
 
     # Define optimizer and compile model
     opt = keras.optimizers.Adam(lr=args.lr)
+
+    loss = None
+    if args.loss == 'bce_dice':
+        loss = bce_dice_loss
+    elif args.loss.startswith('lovasz'):
+        loss = lovasz_hinge_loss
+    else:
+        loss = bce_dice_loss
+
     mobilenet.model.compile(optimizer=opt, loss=bce_dice_loss, metrics=[iou_metric])
 
     # Get data generators
