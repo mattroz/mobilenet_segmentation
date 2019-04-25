@@ -1,0 +1,6 @@
+{
+  "path_to_val_annotations": "/home/matsvei.rozanau/hdd/datasets/coco_dataset/annotations/instances_val2017.json",
+  "path_to_val_images": "/home/matsvei.rozanau/hdd/datasets/coco_dataset/val2017/",
+  "path_to_train_annotations": "/home/matsvei.rozanau/hdd/datasets/coco_dataset/annotations/instances_train2017.json",
+  "path_to_train_images": "/home/matsvei.rozanau/hdd/datasets/coco_dataset/train2017/"
+}
