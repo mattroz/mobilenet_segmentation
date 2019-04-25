@@ -3,7 +3,7 @@ import json
 from math import ceil
 
 import keras
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
@@ -49,10 +49,10 @@ if __name__ == '__main__':
     if args.freeze_encoder:
         for layer in mobilenet.model.layers:
             if layer.name.startswith('enc'):
-                layer.trainable=False
+                layer.trainable = False
     else:
         for layer in mobilenet.model.layers:
-            layer.trainable=True
+            layer.trainable = True
     print(mobilenet.model.summary())
 
     # Define optimizer and compile model
@@ -85,12 +85,12 @@ if __name__ == '__main__':
     # Define callbacks
     model_checkpoint = ModelCheckpoint(
         filepath='./checkpoints/mobilenet401_lovasz-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
-        monitor = 'val_loss',
-        verbose = 1,
-        save_best_only = True,
-        save_weights_only = False,
-        mode = 'auto',
-        period = 1)
+        monitor='val_loss',
+        verbose=1,
+        save_best_only=True,
+        save_weights_only=False,
+        mode='auto',
+        period=1)
 
     plateau_reducer_checkpoint = ReduceLROnPlateau(
         monitor='val_loss',
@@ -105,18 +105,17 @@ if __name__ == '__main__':
         step_size=5 * ceil(len(train_generator) / BATCH_SIZE),
         search_optimal_bounds=False)
 
-    callbacks = [model_checkpoint, plateau_reducer_checkpoint]#cyclic_learning_rate
+    callbacks = [model_checkpoint, plateau_reducer_checkpoint]
 
     print('\nTraining...')
     train_history = mobilenet.model.fit_generator(
         generator=train_generator,
-        max_queue_size = 10,
-        workers = 8,
-        use_multiprocessing = True,
-        steps_per_epoch = ceil(len(train_generator) / BATCH_SIZE),
-        initial_epoch = args.initial_epoch,
-        epochs = args.final_epoch,
-        callbacks = callbacks,
-        validation_data = val_generator,
-        validation_steps = ceil(len(val_generator) / BATCH_SIZE))
-
+        max_queue_size=10,
+        workers=8,
+        use_multiprocessing=True,
+        steps_per_epoch=ceil(len(train_generator) / BATCH_SIZE),
+        initial_epoch=args.initial_epoch,
+        epochs=args.final_epoch,
+        callbacks=callbacks,
+        validation_data=val_generator,
+        validation_steps=ceil(len(val_generator) / BATCH_SIZE))

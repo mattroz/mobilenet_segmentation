@@ -1,6 +1,5 @@
 import os
 
-import keras
 import numpy as np
 import skimage.transform as skt
 
@@ -8,7 +7,6 @@ from pycocotools.coco import COCO
 from keras.utils import Sequence
 from keras.preprocessing.image import img_to_array, load_img
 from albumentations import (
-    PadIfNeeded,
     HorizontalFlip,
     Compose,
     ElasticTransform,
@@ -28,7 +26,7 @@ class COCODataLoader(Sequence):
                  batch_size,
                  path_to_annotations,
                  path_to_images,
-                 resize=(480,480),
+                 resize=(480, 480),
                  shuffle=True,
                  augmentations=True,
                  ):

@@ -1,9 +1,5 @@
-import time
-import skimage.io as io
-import numpy as np
-import tensorflow as tf
 import matplotlib.pyplot as plt
-import keras.backend as K
+
 
 # Function was forked from https://github.com/albu/albumentations/blob/master/notebooks/example_kaggle_salt.ipynb
 def visualize(image, mask, original_image=None, original_mask=None, name=None):

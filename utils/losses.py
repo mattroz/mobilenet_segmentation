@@ -43,7 +43,7 @@ def iou_for_image(y_true, y_pred, smooth=1):
 
     y_pred = K.get_value(y_pred)
     intersection = np.sum(np.abs(y_true * y_pred), axis=(1, 2))
-    union = np.sum(y_true, axis=(1,2)) + np.sum(y_pred, axis=(1, 2))
+    union = np.sum(y_true, axis=(1, 2)) + np.sum(y_pred, axis=(1, 2))
     return (2. * intersection + smooth) / (union + smooth)
 
 
@@ -72,7 +72,7 @@ def binary_focal_loss(y_true, y_pred, alpha=0.25, gamma=2.0):
     pt_0 = K.clip(pt_0, epsilon, 1. - epsilon)
 
     return -K.sum(alpha * K.pow(1. - pt_1, gamma) * K.log(pt_1)) \
-           -K.sum((1 - alpha) * K.pow(pt_0, gamma) * K.log(1. - pt_0))
+           - K.sum((1 - alpha) * K.pow(pt_0, gamma) * K.log(1. - pt_0))
 
 
 def dice_loss(y_true, y_pred):
@@ -124,6 +124,7 @@ def focal_dice_loss(y_true, y_pred):
 """Calculate IoU-over-threshold metric from Kaggle TGS Salt competition
 Excellent explanation: https://www.kaggle.com/pestipeti/explanation-of-scoring-metric"""
 
+
 def get_precision(y_true, y_pred, threshold):
     """
     The main point is the following:
@@ -148,6 +149,7 @@ Maxim Berman 2018 ESAT-PSI KU Leuven (MIT License)
 https://github.com/bermanmaxim/LovaszSoftmax
 """
 
+
 def lovasz_grad(gt_sorted):
     """
     Computes gradient of the Lovasz extension w.r.t sorted errors
@@ -167,7 +169,7 @@ def lovasz_grad(gt_sorted):
 def lovasz_hinge(logits, labels, per_image=True, ignore=None):
     """
     Binary Lovasz hinge loss
-      logits: [B, H, W] Variable, logits at each pixel (between -\infty and +\infty)
+      logits: [B, H, W] Variable, logits at each pixel (between -infty and +infty)
       labels: [B, H, W] Tensor, binary ground truth masks (0 or 1)
       per_image: compute the loss per image instead of per batch
       ignore: void class id
@@ -193,7 +195,7 @@ def lovasz_hinge(logits, labels, per_image=True, ignore=None):
 def lovasz_hinge_flat(logits, labels):
     """
     Binary Lovasz hinge loss
-      logits: [P] Variable, logits at each prediction (between -\infty and +\infty)
+      logits: [P] Variable, logits at each prediction (between -infty and +infty)
       labels: [P] Tensor, binary ground truth labels (0 or 1)
       ignore: label to ignore
     """

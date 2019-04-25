@@ -9,7 +9,10 @@ from argparse import ArgumentParser
 
 from data_generator.data_generator import COCODataLoader
 from models.mobilenet_unet import MobilenetV2_base, relu6
-from utils.losses import iou_metric, bce_dice_loss, get_precision, get_multi_threshold_precision
+from utils.losses import iou_metric,\
+    bce_dice_loss, \
+    get_precision, \
+    get_multi_threshold_precision
 
 
 BATCH_SIZE = 32
@@ -25,8 +28,7 @@ def main():
         config = json.load(f)
 
     mobilenet = MobilenetV2_base()
-    mobilenet.build_model(keras.layers.Input(shape=(400,400,3)))
-
+    mobilenet.build_model(keras.layers.Input(shape=(400, 400, 3)))
 
     mobilenet.model = keras.models.load_model(
             args.model,
@@ -38,7 +40,7 @@ def main():
                         path_to_annotations=config['path_to_val_annotations'],
                         path_to_images=config['path_to_val_images'],
                         batch_size=BATCH_SIZE,
-                        resize=(400,400),
+                        resize=(400, 400),
                         augmentations=False,
                         shuffle=False)
 
@@ -55,11 +57,11 @@ def main():
         pred_mask = keras.backend.cast(pred_mask, dtype=tf.float64)
         pred_mask = keras.backend.squeeze(pred_mask, axis=-1)
         masks = np.squeeze(masks)
-        intersection_over_union = np.zeros((BATCH_SIZE,1))
+        intersection_over_union = np.zeros((BATCH_SIZE, 1))
 
         # Calculate IoU over all thresholds
         for threshold in thresholds:
-            iou_over_threshold = np.reshape(get_precision(masks, pred_mask, threshold), (-1,1))
+            iou_over_threshold = np.reshape(get_precision(masks, pred_mask, threshold), (-1, 1))
             intersection_over_union = np.concatenate((intersection_over_union, iou_over_threshold), axis=1)
 
         # Get mean IoU over thresholds over current batch

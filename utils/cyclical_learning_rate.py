@@ -78,7 +78,7 @@ class CyclicalLearningRateScheduler(keras.callbacks.History):
         # Calculate moving average for optimal bounds searching
         smooth = 0.05
         for index in range(1, self.losses.shape[0]):
-            loss =  smooth * self.losses[index] + (1 - smooth) * averaged_losses[-1]
+            loss = smooth * self.losses[index] + (1 - smooth) * averaged_losses[-1]
             averaged_losses = np.append(averaged_losses, loss)
 
         # Get learning rate with the highest loss and the lowest one
