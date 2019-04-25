@@ -11,6 +11,8 @@ def SE_block(input_tensor, block_id, reduction_rate=16):
     """Channel Squeeze and Excitation block
     Paper: https://arxiv.org/pdf/1709.01507v1.pdf
     """
+    if input_tensor.dtype != tf.float32:
+        input_tensor = tf.cast(input_tensor, tf.float32)
 
     tensor_shape = K.int_shape(input_tensor)
     filters = tensor_shape[-1] if K.image_data_format() == 'channels_last' \
@@ -20,6 +22,7 @@ def SE_block(input_tensor, block_id, reduction_rate=16):
     reduced_filters = (filters // reduction_rate) if not over_reduction else 1
 
     squeeze_layer = GlobalAveragePooling2D(data_format=K.image_data_format(), name=f'squeeze_{block_id}')(input_tensor)
+    squeeze_layer = K.expand_dims(K.expand_dims(squeeze_layer, axis=1), axis=1)
     excitation_1 = Conv2D(kernel_size=(1, 1),
                           filters=reduced_filters,
                           activation='relu',
@@ -29,5 +32,4 @@ def SE_block(input_tensor, block_id, reduction_rate=16):
                           activation='sigmoid',
                           name=f'excitate_2_{block_id}')(excitation_1)
 
-    return Multiply()([input_tensor, excitation_2], name=f'scale_{block_id}')
-
+    return Multiply(name=f'scale_{block_id}')([input_tensor, excitation_2])
