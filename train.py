@@ -1,6 +1,8 @@
-import keras
+import json
 
 from math import ceil
+
+import keras
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau
 from argparse import ArgumentParser
 
@@ -25,18 +27,23 @@ if __name__ == '__main__':
     argparser.add_argument('--loss', type=str, default='bce_dice', required=False)
     args = argparser.parse_args()
 
+    config = None
+    with open('./config.json', 'r') as f:
+        config = json.load(f)
+
     # Get the model
     mobilenet = MobilenetV2_base()
     mobilenet.build_model(keras.layers.Input(shape=INPUT_SHAPE))
 
     # Load saved model if specified
     if args.model is not None:
-        mobilenet.model = keras.models.load_model(args.model,
-                                                  custom_objects={'relu6' : relu6,
-                                                                  'iou_metric' : iou_metric,
-                                                                  'bce_dice_loss' : bce_dice_loss,
-                                                                  'focal_dice_loss' : focal_dice_loss},
-                                                  compile=False)
+        mobilenet.model = keras.models.load_model(
+                args.model,
+                custom_objects={'relu6': relu6,
+                                'iou_metric': iou_metric,
+                                'bce_dice_loss': bce_dice_loss,
+                                'focal_dice_loss': focal_dice_loss},
+                compile=False)
 
     # Freeze encoder layers which are pretrained
     if args.freeze_encoder:
@@ -63,21 +70,21 @@ if __name__ == '__main__':
 
     # Get data generators
     train_generator = COCODataLoader(
-                    path_to_annotations='/home/matsvei.rozanau/hdd/datasets/coco_dataset/annotations/instances_train2017.json',
-                    path_to_images='/home/matsvei.rozanau/hdd/datasets/coco_dataset/train2017/',
+                    path_to_annotations=config['path_to_train_annotations'],
+                    path_to_images=config['path_to_train_images'],
                     batch_size=BATCH_SIZE,
                     resize=INPUT_SHAPE[:-1],
                     augmentations=True)
     val_generator = COCODataLoader(
-                    path_to_annotations='/home/matsvei.rozanau/hdd/datasets/coco_dataset/annotations/instances_val2017.json',
-                    path_to_images='/home/matsvei.rozanau/hdd/datasets/coco_dataset/val2017/',
+                    path_to_annotations=config['path_to_val_annotations'],
+                    path_to_images=config['path_to_val_images'],
                     batch_size=BATCH_SIZE,
                     resize=INPUT_SHAPE[:-1],
                     augmentations=False)
 
     # Define callbacks
     model_checkpoint = ModelCheckpoint(
-        filepath='./checkpoints/mobilenet401-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
+        filepath='./checkpoints/mobilenet401_lovasz-{epoch:02d}_loss-{loss:.4f}_val_loss-{val_loss:.4f}.h5',
         monitor = 'val_loss',
         verbose = 1,
         save_best_only = True,

@@ -1,9 +1,8 @@
 import math
-import tensorflow as tf
+
 import keras
 import keras.backend as K
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 class CyclicalLearningRateScheduler(keras.callbacks.History):
@@ -36,18 +35,21 @@ class CyclicalLearningRateScheduler(keras.callbacks.History):
 
     def on_train_begin(self, logs=None):
         K.set_value(self.model.optimizer.lr, self.base_lr)
-        if self.search_optimal_bounds:
-            # Save model initial weights for further reinitialization
-            self.initial_weights = self.model.get_weights()
-            # Create array of learning rates to iterate over
-            self.n_epochs_for_search = self.step_size // 2
-            logs['epochs'] += self.n_epochs_for_search
-            iters_in_epoch = self.params['steps']
-            self.search_lrs = np.linspace(self.base_lr,
-                                          self.max_lr,
-                                          self.n_epochs_for_search * iters_in_epoch)
-            self.search_iteration = 1
-            self.losses = np.array([])
+
+        if not self.search_optimal_bounds:
+            return
+
+        # Save model initial weights for further reinitialization
+        self.initial_weights = self.model.get_weights()
+        # Create array of learning rates to iterate over
+        self.n_epochs_for_search = self.step_size // 2
+        logs['epochs'] += self.n_epochs_for_search
+        iters_in_epoch = self.params['steps']
+        self.search_lrs = np.linspace(self.base_lr,
+                                      self.max_lr,
+                                      self.n_epochs_for_search * iters_in_epoch)
+        self.search_iteration = 1
+        self.losses = np.array([])
 
     def on_batch_end(self, batch, logs=None):
         updated_lr = None
@@ -59,9 +61,10 @@ class CyclicalLearningRateScheduler(keras.callbacks.History):
             cycle = math.floor(1 + batch / (2 * self.step_size))
             x = abs(batch / self.step_size - 2 * cycle + 1)
             updated_lr = self.base_lr + (self.max_lr - self.base_lr) * max(0, 1 - x)
+
         K.set_value(self.model.optimizer.lr, updated_lr)
 
-    def __calculate_optimal_bounds(self):
+    def _calculate_optimal_bounds(self):
         """Calculates new base_lr and max_lr based on training results.
 
         return: float, float
@@ -74,8 +77,8 @@ class CyclicalLearningRateScheduler(keras.callbacks.History):
 
         # Calculate moving average for optimal bounds searching
         smooth = 0.05
-        for i in range(1, self.losses.shape[0]):
-            loss =  smooth * self.losses[i] + (1 - smooth) * averaged_losses[-1]
+        for index in range(1, self.losses.shape[0]):
+            loss =  smooth * self.losses[index] + (1 - smooth) * averaged_losses[-1]
             averaged_losses = np.append(averaged_losses, loss)
 
         # Get learning rate with the highest loss and the lowest one
@@ -85,14 +88,15 @@ class CyclicalLearningRateScheduler(keras.callbacks.History):
         return self.search_lrs[highest_loss_idx], self.search_lrs[lowest_loss_idx]
 
     def on_epoch_end(self, epoch, logs=None):
-        if self.search_optimal_bounds:
-            if epoch == self.n_epochs_for_search:
-                print("Stop searching for optimal bounds, calculating...")
-                self.base_lr, self.max_lr = self.__calculate_optimal_bounds()
-                print(f"Set base_lr: {self.base_lr}, max_lr: {self.max_lr}")
+        if (not self.search_optimal_bounds) and (epoch != self.n_epochs_for_search):
+            return
 
-                print(f"Reinitializing model...")
-                self.model.set_weights(self.initial_weights)
-                del self.initial_weights
+        print("Stop searching for optimal bounds, calculating...")
+        self.base_lr, self.max_lr = self._calculate_optimal_bounds()
+        print(f"Set base_lr: {self.base_lr}, max_lr: {self.max_lr}")
 
-                self.search_optimal_bounds = False
+        print(f"Reinitializing model...")
+        self.model.set_weights(self.initial_weights)
+        self.initial_weights = None
+
+        self.search_optimal_bounds = False

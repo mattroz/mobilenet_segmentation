@@ -3,7 +3,6 @@ import tensorflow as tf
 import keras.backend as K
 
 
-# IoU approximation for segmentaton:
 def iou_metric(y_true, y_pred, smooth=1):
     """Calculates Intersection-over-Union metric across batch axis.
 
@@ -22,8 +21,9 @@ def iou_metric(y_true, y_pred, smooth=1):
 
     y_pred = K.cast(y_pred, dtype=tf.float32)
     y_true = K.cast(y_true, dtype=tf.float32)
-    intersection = K.sum(K.abs(y_true * y_pred), axis=[1,2])
-    union = K.sum(y_true, axis=[1,2]) + K.sum(y_pred, axis=[1,2])
+    intersection = K.sum(K.abs(y_true * y_pred), axis=[1, 2])
+    union = K.sum(y_true, axis=[1, 2]) + K.sum(y_pred, axis=[1, 2])
+
     return K.mean((2. * intersection + smooth) / (union + smooth), axis=0)
 
 
@@ -42,10 +42,9 @@ def iou_for_image(y_true, y_pred, smooth=1):
     """
 
     y_pred = K.get_value(y_pred)
-    intersection = np.sum(np.abs(y_true * y_pred), axis=(1,2))
-    union = np.sum(y_true, axis=(1,2)) + np.sum(y_pred, axis=(1,2))
-    iou = (2. * intersection + smooth) / (union + smooth)
-    return iou
+    intersection = np.sum(np.abs(y_true * y_pred), axis=(1, 2))
+    union = np.sum(y_true, axis=(1,2)) + np.sum(y_pred, axis=(1, 2))
+    return (2. * intersection + smooth) / (union + smooth)
 
 
 def binary_focal_loss(y_true, y_pred, alpha=0.25, gamma=2.0):
@@ -67,13 +66,13 @@ def binary_focal_loss(y_true, y_pred, alpha=0.25, gamma=2.0):
     pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
 
     epsilon = K.epsilon()
-    # clip to prevent NaN's and Inf's
 
+    # clip to prevent NaN's and Inf's
     pt_1 = K.clip(pt_1, epsilon, 1. - epsilon)
     pt_0 = K.clip(pt_0, epsilon, 1. - epsilon)
 
     return -K.sum(alpha * K.pow(1. - pt_1, gamma) * K.log(pt_1)) \
-           - K.sum((1 - alpha) * K.pow(pt_0, gamma) * K.log(1. - pt_0))
+           -K.sum((1 - alpha) * K.pow(pt_0, gamma) * K.log(1. - pt_0))
 
 
 def dice_loss(y_true, y_pred):
@@ -87,7 +86,7 @@ def dice_loss(y_true, y_pred):
     :return: tf.Tensor.
     """
 
-    return (1 - iou_metric(y_true, y_pred))
+    return 1 - iou_metric(y_true, y_pred)
 
 
 def bce_dice_loss(y_true, y_pred):
@@ -103,8 +102,7 @@ def bce_dice_loss(y_true, y_pred):
     :return: tf.Tensor
     """
 
-    loss = K.mean(K.binary_crossentropy(y_true, y_pred)) - K.log(iou_metric(y_true, y_pred))
-    return loss
+    return K.mean(K.binary_crossentropy(y_true, y_pred)) - K.log(iou_metric(y_true, y_pred))
 
 
 def focal_dice_loss(y_true, y_pred):
@@ -120,21 +118,23 @@ def focal_dice_loss(y_true, y_pred):
     :return: tf.Tensor
     """
 
-    loss = binary_focal_loss(y_true, y_pred) - K.log(iou_metric(y_true, y_pred))
-    return loss
+    return binary_focal_loss(y_true, y_pred) - K.log(iou_metric(y_true, y_pred))
 
 
-# Calculate IoU-over-threshold metric from Kaggle TGS Salt competition
-# Excellent explanation: https://www.kaggle.com/pestipeti/explanation-of-scoring-metric
+"""Calculate IoU-over-threshold metric from Kaggle TGS Salt competition
+Excellent explanation: https://www.kaggle.com/pestipeti/explanation-of-scoring-metric"""
+
 def get_precision(y_true, y_pred, threshold):
-    # The main point is the following:
-    #   - GT mask is empty, your prediction non-empty: (i.e. FP) ==> precision = 0
-    #   - GT mask non empty, your prediction empty: (i.e. FN) ==> precision = 0
-    #   - GT mask empty, your prediction empty: (i.e. TN) ==> precision = 1
-    #   - GT mask non-empty, your prediction non-empty: (i.e. TP) ==> precision = [IoU(GT, pred) > threshold]
-    # But here is the easiest case - binary segmentation, i.e. it is sufficient to calculate only IoU > threshold
-    precision = np.asarray(iou_for_image(y_true, y_pred) > threshold, dtype=np.int8)
-    return precision
+    """
+    The main point is the following:
+      - GT mask is empty, your prediction non-empty: (i.e. FP) ==> precision = 0
+      - GT mask non empty, your prediction empty: (i.e. FN) ==> precision = 0
+      - GT mask empty, your prediction empty: (i.e. TN) ==> precision = 1
+      - GT mask non-empty, your prediction non-empty: (i.e. TP) ==> precision = [IoU(GT, pred) > threshold]
+    But here is the easiest case - binary segmentation, i.e. it is sufficient to calculate only IoU > threshold
+    """
+
+    return np.asarray(iou_for_image(y_true, y_pred) > threshold, dtype=np.int8)
 
 
 def get_multi_threshold_precision(precision):
@@ -145,6 +145,7 @@ def get_multi_threshold_precision(precision):
 """
 Lovasz-Softmax and Jaccard hinge loss in Tensorflow
 Maxim Berman 2018 ESAT-PSI KU Leuven (MIT License)
+https://github.com/bermanmaxim/LovaszSoftmax
 """
 
 def lovasz_grad(gt_sorted):

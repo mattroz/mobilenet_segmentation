@@ -1,11 +1,12 @@
 import os
+
 import keras
 import numpy as np
 import skimage.transform as skt
+
 from pycocotools.coco import COCO
 from keras.utils import Sequence
 from keras.preprocessing.image import img_to_array, load_img
-
 from albumentations import (
     PadIfNeeded,
     HorizontalFlip,
@@ -15,7 +16,7 @@ from albumentations import (
     RandomSizedCrop,
     OneOf,
     RandomBrightnessContrast,
-    RandomGamma    ,
+    RandomGamma,
     ShiftScaleRotate,
 )
 
@@ -29,7 +30,8 @@ class COCODataLoader(Sequence):
                  path_to_images,
                  resize=(480,480),
                  shuffle=True,
-                 augmentations=True):
+                 augmentations=True,
+                 ):
         """
         Parameters
         ----------
@@ -79,8 +81,8 @@ class COCODataLoader(Sequence):
             batch_annotations_ids = self.dataset.getAnnIds(imgIds=desc['id'], catIds=self.categories_ids, iscrowd=None)
             annotations = self.dataset.loadAnns(batch_annotations_ids)
             mask = self.dataset.annToMask(annotations[0])
-            for i in range(len(annotations)):
-                mask += self.dataset.annToMask(annotations[i])
+            for index in range(len(annotations)):
+                mask += self.dataset.annToMask(annotations[index])
 
             # Make binary mask
             mask = np.where(mask >= 1., 1., 0)
@@ -93,16 +95,16 @@ class COCODataLoader(Sequence):
             # Augmentations
             if self.augmentations:
                 aug = Compose([
-                    HorizontalFlip( p=.5),
-                    RandomSizedCrop(p=.35, min_max_height=(10, self.resize[0]-30), height=self.resize[0], width=self.resize[1]),
-                    GridDistortion( p=.2, border_mode=0, distort_limit=0.1),
-                    ElasticTransform(p=.25, alpha=10, sigma=120 * 0.5, alpha_affine=120 * 0.05),
-                    ShiftScaleRotate(p=.4, border_mode=0, shift_limit=0.04, scale_limit=0.03),
+                    HorizontalFlip(p=0.5),
+                    RandomSizedCrop(p=0.35, min_max_height=(10, self.resize[0] - 30), height=self.resize[0], width=self.resize[1]),
+                    GridDistortion(p=0.2, border_mode=0, distort_limit=0.1),
+                    ElasticTransform(p=0.25, alpha=10, sigma=120 * 0.5, alpha_affine=120 * 0.05),
+                    ShiftScaleRotate(p=0.4, border_mode=0, shift_limit=0.04, scale_limit=0.03),
                     OneOf([
-                        RandomBrightnessContrast(p=.8),
-                        RandomGamma(p=.9)
-                    ], p=.5)
-                ], p=1.)
+                        RandomBrightnessContrast(p=0.8),
+                        RandomGamma(p=0.9)
+                    ], p=0.5)
+                ], p=1)
                 augmented = aug(image=image, mask=mask)
                 image = augmented['image']
                 mask = augmented['mask']
