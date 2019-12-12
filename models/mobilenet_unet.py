@@ -239,17 +239,16 @@ class MobilenetV2_base(object):
 
         # load weights
         if load_imagenet_weights:
-            if K.image_data_format() == 'channels_first':
-                raise ValueError('Weights for "channels_first" format '
-                                 'are not available.')
-
-            model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
-                         str(alpha) + '_224_no_top' + '.h5'
-            weigh_path = BASE_WEIGHT_PATH + model_name
-            weights_path = get_file(model_name, weigh_path,
-                                    cache_subdir='models')
-            print(f"Loading weights from {weights_path}")
-            model.load_weights(weights_path)
+             if K.image_data_format() == 'channels_first':
+                 raise ValueError('Weights for "channels_first" format '
+                                  'are not available.')
+            
+             model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_' + \
+                          str(alpha) + '_224_no_top' + '.h5'
+             weigh_path = BASE_WEIGHT_PATH + model_name
+             weights_path = get_file(model_name, weigh_path,
+                                     cache_subdir='models')
+             print(f"Loading weights from {weights_path}")
 
         return model
 
