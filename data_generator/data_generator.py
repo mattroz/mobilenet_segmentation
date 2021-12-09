@@ -63,7 +63,7 @@ class COCODataLoader(Sequence):
             np.random.shuffle(self.images_descriptions)
 
     def __len__(self):
-        return int(np.ceil(len(self.images_ids) / float(self.batch_size)))
+        return len(self.images_ids)
 
     def __getitem__(self, index):
         images = []
